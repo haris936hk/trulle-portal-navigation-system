@@ -17,14 +17,35 @@ export default defineConfig({
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trulle Portal Preview</title>
-    <link rel="stylesheet" href="/portal-nav.css" />
+    <link rel="stylesheet" href="./portal-nav.css" />
     <style>
       html, body { margin: 0; width: 100%; height: 100%; background: #fcfcfc; }
+      #trulle-portal-root { width: 100vw; min-height: 56.25vw; max-height: 100vh; }
+      #portal-load-error {
+        position: fixed;
+        inset: auto 16px 16px 16px;
+        z-index: 99999;
+        padding: 10px 12px;
+        border: 1px solid #b30000;
+        background: #fff5f5;
+        color: #7a0000;
+        font: 14px/1.4 sans-serif;
+        display: none;
+      }
     </style>
   </head>
   <body>
     <div id="trulle-portal-root"></div>
-    <script src="/portal-nav.iife.js"></script>
+    <div id="portal-load-error">Portal bundle failed to load. Check console/network for portal-nav.iife.js.</div>
+    <script>
+      window.addEventListener('error', function (e) {
+        if (e && e.filename && e.filename.indexOf('portal-nav.iife.js') !== -1) {
+          var el = document.getElementById('portal-load-error');
+          if (el) el.style.display = 'block';
+        }
+      });
+    </script>
+    <script src="./portal-nav.iife.js"></script>
   </body>
 </html>`,
         });
