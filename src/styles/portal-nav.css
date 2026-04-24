@@ -1,0 +1,116 @@
+/* portal-nav.css
+   Portal Navigation System — React + Vite build
+   ─────────────────────────────────────────────── */
+
+:root {
+  --portal-bg: #fcfcfc;     /* matches site background */
+  --portal-stroke: #1a1a1a;
+}
+
+/* ── Container ─────────────────────────────────────── */
+#portal-system {
+  position: relative;
+  width: 100vw;
+  max-width: none;
+  margin: 0;
+  height: min(100vh, calc(100vw * (9 / 16)));
+  height: min(100dvh, calc(100vw * (9 / 16)));
+  aspect-ratio: auto;
+  overflow: visible;
+  background: var(--portal-bg);
+  user-select: none;
+}
+
+/* Fallback for browsers without aspect-ratio */
+@supports not (aspect-ratio: 16 / 9) {
+  #portal-system::before {
+    content: '';
+    display: block;
+    padding-top: 56.25%;
+  }
+  #portal-system > * {
+    position: absolute;
+    top: 0; left: 0;
+  }
+}
+
+/* ── SVG ────────────────────────────────────────────── */
+#portal-system > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;  /* hit detection via overlay divs only */
+  z-index: 1;
+}
+
+.line-art-layer {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.portal-ring {
+  will-change: transform;
+}
+
+/* Outer rings mask the background artwork lines */
+[data-portal-outer] {
+  fill: var(--portal-bg);
+}
+
+/* ── Portal Overlays ────────────────────────────────── */
+.portal-overlay {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  will-change: transform;
+  z-index: 10;
+  contain: paint;
+  backface-visibility: hidden;
+}
+
+.portal-overlay:focus-visible {
+  outline: 2px solid #1a1a1a;
+  outline-offset: 4px;
+}
+
+/* ── Media layer (Handled via WebGL) ────────────────── */
+.portal-media {
+  display: none;
+}
+
+/* ── Full-viewport destination frame ────────────────── */
+#portal-destination-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: var(--portal-bg);
+}
+
+#portal-destination-frame.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#portal-destination-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* ── Destination page enter (fallback for direct nav) ─ */
+.portal-destination {
+  animation: portalPageEnter 0.55s ease forwards;
+}
+
+@keyframes portalPageEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
