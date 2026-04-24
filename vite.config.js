@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  define: {
+    'process.env.NODE_ENV': '"production"',
+  },
   plugins: [
     react(),
     {
@@ -37,6 +40,11 @@ export default defineConfig({
   <body>
     <div id="trulle-portal-root"></div>
     <div id="portal-load-error">Portal bundle failed to load. Check console/network for portal-nav.iife.js.</div>
+    <script>
+      // Some bundled deps still read process.env.NODE_ENV in browser runtime.
+      // Provide a safe shim for static preview hosts like Vercel.
+      window.process = window.process || { env: { NODE_ENV: 'production' } };
+    </script>
     <script>
       window.addEventListener('error', function (e) {
         if (e && e.filename && e.filename.indexOf('portal-nav.iife.js') !== -1) {
