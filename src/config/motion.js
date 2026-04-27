@@ -3,7 +3,7 @@
  * Keep this identical across hooks so timeline instances are reused.
  */
 const BASE_PORTAL_MOTION_CONFIG = {
-  hoverScale: 6.3,
+  hoverScale: 8.6,
 
   // Timeline segment durations
   hoverDuration: 1.15,
