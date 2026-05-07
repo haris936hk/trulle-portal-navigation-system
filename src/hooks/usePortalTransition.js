@@ -30,7 +30,7 @@ export default function usePortalTransition(
     const overlay = overlayRef.current;
     const system = systemRef.current;
     const pixi = store.getPixiPortal(portalId);
-    const motionConfig = getPortalMotionConfig();
+    const motionConfig = getPortalMotionConfig(portalId);
 
     if (!overlay || !pixi) return;
 
@@ -97,11 +97,11 @@ export function useBackNavigation(systemRef) {
       if (!destFrame || !destFrame.classList.contains('is-active')) return;
 
       const store = usePortalStore.getState();
-      const motionConfig = getPortalMotionConfig();
       store.startClosing();
 
       const portalId =
         event.state?.portalId || store.activePortalId || store.getBackNavEntry()?.id;
+      const motionConfig = getPortalMotionConfig(portalId);
 
       const system = systemRef.current;
       const pixi = store.getPixiPortal(portalId);

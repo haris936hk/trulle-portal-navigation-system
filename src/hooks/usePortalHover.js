@@ -21,7 +21,7 @@ export default function usePortalHover(overlayRef, portalId, href) {
 
     const overlay = overlayRef.current;
     const pixi = usePortalStore.getState().getPixiPortal(portalId);
-    const motionConfig = getPortalMotionConfig();
+    const motionConfig = getPortalMotionConfig(portalId);
 
     if (!pixi) return;
 
@@ -36,7 +36,7 @@ export default function usePortalHover(overlayRef, portalId, href) {
 
     const overlay = overlayRef.current;
     const pixi = usePortalStore.getState().getPixiPortal(portalId);
-    const motionConfig = getPortalMotionConfig();
+    const motionConfig = getPortalMotionConfig(portalId);
 
     if (!pixi) return;
 
