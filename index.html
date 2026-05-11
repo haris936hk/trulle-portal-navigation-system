@@ -22,7 +22,7 @@
          The container for the portal system. 
          In production, this is embedded in a WordPress page.
       */
-      #trulle-portal-root {
+      .trulle-portal-root {
         width: 100vw;
         height: 100vh;
         /* Maintaining the 16:9 aspect ratio container logic if needed, 
@@ -36,9 +36,9 @@
     <!-- 
       The mount point for the React Portal System.
       Optional data-portals attribute can be added here for local overrides:
-      data-portals='[{"id":1,"href":"/test-pages/destination-1.html"}]'
+      data-portals='[{"id":1,"destination":"/test-pages/destination-1.html"}]'
     -->
-    <div id="trulle-portal-root"></div>
+    <div class="trulle-portal-root" data-trulle-portal-root="1"></div>
 
     <!-- Main entry point for Vite dev server -->
     <script type="module" src="/src/main.jsx"></script>

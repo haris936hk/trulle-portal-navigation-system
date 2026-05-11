@@ -172,10 +172,10 @@ export function ensurePortalMotion(pixi, overlay, config) {
       ease: config.openSegmentEase || 'expo.in',
     }, 'hover');
     tl.to(mediaSprite, {
-      alpha: 1,
-      duration: 0.3,
-      ease: 'none',
-    }, 'hover');
+      alpha: 0,
+      duration: Math.min(0.95, Math.max(0.62, config.clickDuration * 0.42)),
+      ease: 'sine.inOut',
+    }, `hover+=${Math.max(0, config.clickDuration * 0.38)}`);
   }
 
   tl.addLabel('open');

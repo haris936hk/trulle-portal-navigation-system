@@ -1,5 +1,3 @@
-import usePortalStore from '../store/portalStore';
-import { getDestinationElements } from '../components/DestinationFrame';
 import {
   getMediaKind,
   toAbsoluteHref,
@@ -7,33 +5,6 @@ import {
 } from './mediaEmbed';
 
 const OPEN_TIMEOUT_MS = 4000;
-
-let activeRequestId = 0;
-let activeResolvedKey = null;
-let activeLoadHandler = null;
-let activeTimeoutId = null;
-let activeReady = false;
-let activeReadyCallbacks = [];
-
-function clearLoadListener(iframe) {
-  if (iframe && activeLoadHandler) {
-    iframe.removeEventListener('load', activeLoadHandler);
-  }
-  activeLoadHandler = null;
-}
-
-function clearOpenWatchdog() {
-  if (activeTimeoutId) {
-    window.clearTimeout(activeTimeoutId);
-    activeTimeoutId = null;
-  }
-}
-
-function resetInFlight(iframe) {
-  clearLoadListener(iframe);
-  clearOpenWatchdog();
-  activeReadyCallbacks = [];
-}
 
 function resolveTarget(href) {
   const absolute = toAbsoluteHref(href);
@@ -67,94 +38,116 @@ function applyTarget(iframe, target) {
   iframe.src = target.src;
 }
 
-function beginLoad(target, onReady) {
-  const { iframe } = getDestinationElements();
-  if (!iframe) return null;
+export function createDestinationFrameController({ getIframe, store }) {
+  let activeRequestId = 0;
+  let activeResolvedKey = null;
+  let activeLoadHandler = null;
+  let activeTimeoutId = null;
+  let activeReady = false;
+  let activeReadyCallbacks = [];
 
-  resetInFlight(iframe);
+  function clearLoadListener(iframe) {
+    if (iframe && activeLoadHandler) {
+      iframe.removeEventListener('load', activeLoadHandler);
+    }
+    activeLoadHandler = null;
+  }
 
-  activeRequestId += 1;
-  const requestId = activeRequestId;
-  activeResolvedKey = target.key;
-  activeReady = false;
-  activeReadyCallbacks = [];
+  function clearOpenWatchdog() {
+    if (activeTimeoutId) {
+      window.clearTimeout(activeTimeoutId);
+      activeTimeoutId = null;
+    }
+  }
 
-  // Ensure stale success state never unlocks reveal.
-  usePortalStore.setState({ iframeReady: false });
-  usePortalStore.getState().setPreloadedHref(target.key);
-
-  activeLoadHandler = () => {
-    if (requestId !== activeRequestId) return;
-    activeReady = true;
+  function resetInFlight(iframe) {
+    clearLoadListener(iframe);
     clearOpenWatchdog();
-    usePortalStore.getState().setIframeReady();
-    if (onReady) onReady(target);
-    activeReadyCallbacks.forEach((cb) => cb(target));
     activeReadyCallbacks = [];
-  };
-
-  iframe.addEventListener('load', activeLoadHandler);
-  applyTarget(iframe, target);
-
-  return { requestId, target };
-}
-
-export function preloadDestinationFrame(href) {
-  if (!href) return;
-  const target = resolveTarget(href);
-
-  // Avoid duplicate loads for same already-ready target.
-  if (activeResolvedKey === target.key && activeReady) {
-    return;
   }
 
-  beginLoad(target);
-}
+  function beginLoad(target, onReady) {
+    const iframe = getIframe();
+    if (!iframe) return null;
 
-export function openDestinationFrame(href, { onReady, onTimeout } = {}) {
-  if (!href) return;
-  const target = resolveTarget(href);
+    resetInFlight(iframe);
 
-  // Fast-path already loaded destination.
-  if (activeResolvedKey === target.key && activeReady) {
-    onReady?.(target);
-    return;
-  }
-
-  // If the same target is already loading, attach to that in-flight request.
-  if (activeResolvedKey === target.key && activeLoadHandler) {
-    if (onReady) activeReadyCallbacks.push(onReady);
+    activeRequestId += 1;
     const requestId = activeRequestId;
-    clearOpenWatchdog();
-    activeTimeoutId = window.setTimeout(() => {
-      if (requestId !== activeRequestId || activeReady) return;
+    activeResolvedKey = target.key;
+    activeReady = false;
+    activeReadyCallbacks = [];
+
+    store.setState({ iframeReady: false });
+    store.getState().setPreloadedHref(target.key);
+
+    activeLoadHandler = () => {
+      if (requestId !== activeRequestId) return;
+      activeReady = true;
       clearOpenWatchdog();
-      onTimeout?.(target);
-    }, OPEN_TIMEOUT_MS);
-    return;
+      store.getState().setIframeReady();
+      if (onReady) onReady(target);
+      activeReadyCallbacks.forEach((cb) => cb(target));
+      activeReadyCallbacks = [];
+    };
+
+    iframe.addEventListener('load', activeLoadHandler);
+    applyTarget(iframe, target);
+
+    return { requestId, target };
   }
 
-  const started = beginLoad(target, onReady);
-  if (!started) return;
+  return {
+    preload(href) {
+      if (!href) return;
+      const target = resolveTarget(href);
+      if (activeResolvedKey === target.key && activeReady) return;
+      beginLoad(target);
+    },
 
-  const { requestId } = started;
-  activeTimeoutId = window.setTimeout(() => {
-    if (requestId !== activeRequestId || activeReady) return;
-    clearOpenWatchdog();
-    onTimeout?.(target);
-  }, OPEN_TIMEOUT_MS);
+    open(href, { onReady, onTimeout } = {}) {
+      if (!href) return;
+      const target = resolveTarget(href);
+
+      if (activeResolvedKey === target.key && activeReady) {
+        onReady?.(target);
+        return;
+      }
+
+      if (activeResolvedKey === target.key && activeLoadHandler) {
+        if (onReady) activeReadyCallbacks.push(onReady);
+        const requestId = activeRequestId;
+        clearOpenWatchdog();
+        activeTimeoutId = window.setTimeout(() => {
+          if (requestId !== activeRequestId || activeReady) return;
+          clearOpenWatchdog();
+          onTimeout?.(target);
+        }, OPEN_TIMEOUT_MS);
+        return;
+      }
+
+      const started = beginLoad(target, onReady);
+      if (!started) return;
+
+      const { requestId } = started;
+      activeTimeoutId = window.setTimeout(() => {
+        if (requestId !== activeRequestId || activeReady) return;
+        clearOpenWatchdog();
+        onTimeout?.(target);
+      }, OPEN_TIMEOUT_MS);
+    },
+
+    reset() {
+      const iframe = getIframe();
+      if (!iframe) return;
+
+      activeRequestId += 1;
+      activeResolvedKey = null;
+      activeReady = false;
+      resetInFlight(iframe);
+      iframe.srcdoc = '';
+      iframe.src = 'about:blank';
+    },
+  };
 }
 
-export function resetDestinationFrame() {
-  const { iframe } = getDestinationElements();
-  if (!iframe) return;
-
-  activeRequestId += 1;
-  activeResolvedKey = null;
-  activeReady = false;
-
-  resetInFlight(iframe);
-
-  iframe.srcdoc = '';
-  iframe.src = 'about:blank';
-}

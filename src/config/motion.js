@@ -6,28 +6,28 @@ const BASE_PORTAL_MOTION_CONFIG = {
   hoverScale: 8.6,
 
   // Timeline segment durations
-  hoverDuration: 2,
-  clickDuration: 2.4,
+  hoverDuration: 2.9,
+  clickDuration: 3.35,
 
   // Transition durations (timeline playhead motion)
-  hoverOutDuration: 2,
-  openDuration: 2,
-  backDuration: 2,
+  hoverOutDuration: 2.45,
+  openDuration: 2.7,
+  backDuration: 2.7,
 
   // Transition eases
-  hoverEase: "sine.out",
-  hoverOutEase: "sine.out",
-  openEase: "sine.in",
-  backEase: "sine.out",
+  hoverEase: "sine.inOut",
+  hoverOutEase: "sine.inOut",
+  openEase: "sine.inOut",
+  backEase: "sine.inOut",
 
   // Segment eases
-  hoverSegmentEase: "sine.out",
-  openSegmentEase: "sine.out",
+  hoverSegmentEase: "sine.inOut",
+  openSegmentEase: "sine.inOut",
 
   // Media reveal timing inside hover segment
-  mediaFadeDuration: 0.72,
-  mediaFadeDelay: 0.12,
-  mediaFadeEase: "sine.out",
+  mediaFadeDuration: 1.25,
+  mediaFadeDelay: 0.22,
+  mediaFadeEase: "sine.inOut",
 };
 
 const PER_PORTAL_HOVER_SCALE = {

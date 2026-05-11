@@ -4,7 +4,10 @@
  * Ring path data and overlay positions are derived from the SVG artwork
  * (viewBox 3840 × 2160). These never change unless the artwork changes.
  *
- * Destinations (href, video) default to empty strings.
+ * Destinations use explicit fields:
+ * - destination: where the portal opens
+ * - preview: what appears inside the peephole on hover
+ *
  * In WordPress, override them via the data-portals attribute on the
  * mount element, or configure per-portal in the Elementor HTML widget.
  */
@@ -22,8 +25,8 @@ const PORTALS = [
     outerR: 95,
     innerR: 75,
     outerOpacity: 0.99964,
-    href: '/images/preview1.png',
-    video: '',
+    destination: '',
+    preview: '',
   },
   {
     id: 2,
@@ -37,8 +40,8 @@ const PORTALS = [
     outerR: 95,
     innerR: 75,
     outerOpacity: 1,
-    href: '/images/preview2.png',
-    video: '',
+    destination: '',
+    preview: '',
   },
   {
     id: 3,
@@ -52,8 +55,8 @@ const PORTALS = [
     outerR: 95,
     innerR: 75,
     outerOpacity: 1,
-    href: '/images/preview3.png',
-    video: '',
+    destination: '',
+    preview: '',
   },
   {
     id: 4,
@@ -67,8 +70,8 @@ const PORTALS = [
     outerR: 95,
     innerR: 75,
     outerOpacity: 1,
-    href: '/images/preview1.png',
-    video: '',
+    destination: '',
+    preview: '',
   },
   {
     id: 5,
@@ -82,8 +85,8 @@ const PORTALS = [
     outerR: 95,
     innerR: 75,
     outerOpacity: 1,
-    href: '/images/preview2.png',
-    video: '',
+    destination: '',
+    preview: '',
   },
 ];
 

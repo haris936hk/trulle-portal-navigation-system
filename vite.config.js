@@ -23,7 +23,7 @@ export default defineConfig({
     <link rel="stylesheet" href="./portal-nav.css" />
     <style>
       html, body { margin: 0; width: 100%; height: 100%; background: #fcfcfc; }
-      #trulle-portal-root { width: 100vw; min-height: 56.25vw; max-height: 100vh; }
+      .trulle-portal-root { width: 100vw; min-height: 56.25vw; max-height: 100vh; }
       #portal-load-error {
         position: fixed;
         inset: auto 16px 16px 16px;
@@ -38,7 +38,7 @@ export default defineConfig({
     </style>
   </head>
   <body>
-    <div id="trulle-portal-root"></div>
+    <div class="trulle-portal-root" data-trulle-portal-root="1"></div>
     <div id="portal-load-error">Portal bundle failed to load. Check console/network for portal-nav.iife.js.</div>
     <script>
       // Some bundled deps still read process.env.NODE_ENV in browser runtime.

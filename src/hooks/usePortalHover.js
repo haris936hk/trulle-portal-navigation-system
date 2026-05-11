@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import usePortalStore from '../store/portalStore';
+import { usePortalStoreApi } from '../store/portalStore';
 import { tweenPortalTo } from '../lib/portalMotion';
 import { getPortalMotionConfig } from '../config/motion';
-import { preloadDestinationFrame } from '../lib/destinationFrameController';
+import { usePortalRuntime } from '../store/portalRuntimeContext';
 
 /**
  * @param {React.RefObject} overlayRef - the .portal-overlay div hit-box
@@ -10,17 +10,20 @@ import { preloadDestinationFrame } from '../lib/destinationFrameController';
  * @param {string} href - destination URL for preloading
  */
 export default function usePortalHover(overlayRef, portalId, href) {
+  const store = usePortalStoreApi();
+  const { destinationController } = usePortalRuntime();
+
   const preloadDestination = useCallback(() => {
-    preloadDestinationFrame(href);
-  }, [href]);
+    destinationController.preload(href);
+  }, [destinationController, href]);
 
   const hoverIn = useCallback(() => {
-    if (usePortalStore.getState().transitionPhase !== 'idle') return;
+    if (store.getState().transitionPhase !== 'idle') return;
 
     preloadDestination();
 
     const overlay = overlayRef.current;
-    const pixi = usePortalStore.getState().getPixiPortal(portalId);
+    const pixi = store.getState().getPixiPortal(portalId);
     const motionConfig = getPortalMotionConfig(portalId);
 
     if (!pixi) return;
@@ -29,13 +32,13 @@ export default function usePortalHover(overlayRef, portalId, href) {
       duration: motionConfig.hoverDuration,
       ease: motionConfig.hoverEase,
     });
-  }, [overlayRef, portalId, preloadDestination]);
+  }, [overlayRef, portalId, preloadDestination, store]);
 
   const hoverOut = useCallback(() => {
-    if (usePortalStore.getState().transitionPhase !== 'idle') return;
+    if (store.getState().transitionPhase !== 'idle') return;
 
     const overlay = overlayRef.current;
-    const pixi = usePortalStore.getState().getPixiPortal(portalId);
+    const pixi = store.getState().getPixiPortal(portalId);
     const motionConfig = getPortalMotionConfig(portalId);
 
     if (!pixi) return;
@@ -44,7 +47,7 @@ export default function usePortalHover(overlayRef, portalId, href) {
       duration: motionConfig.hoverOutDuration,
       ease: motionConfig.hoverOutEase,
     });
-  }, [overlayRef, portalId]);
+  }, [overlayRef, portalId, store]);
 
   return { hoverIn, hoverOut };
 }

@@ -8,8 +8,8 @@ import PortalSystem from './components/PortalSystem';
 import PORTALS from './config/portals';
 import './styles/portal-nav.css';
 
-function normalizePortalHref(href) {
-  return typeof href === 'string' ? href.trim() : '';
+function normalizeValue(value) {
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 export default function App({ portalOverrides }) {
@@ -19,10 +19,12 @@ export default function App({ portalOverrides }) {
     return PORTALS.map((p) => {
       const override = portalOverrides.find((o) => o.id === p.id);
       if (!override) return p;
+      const destination = normalizeValue(override.destination);
+      const preview = normalizeValue(override.preview);
       return {
         ...p,
-        href: normalizePortalHref(override.href),
-        video: override.video || p.video,
+        destination: destination || normalizeValue(p.destination),
+        preview: preview || normalizeValue(p.preview),
         label: override.label || p.label,
       };
     });

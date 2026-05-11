@@ -1,19 +1,23 @@
 import { useEffect, useRef } from 'react';
 import { Application, Assets, Sprite, Graphics, Container, Texture } from 'pixi.js';
 import gsap from 'gsap';
-import usePortalStore from '../store/portalStore';
+import { usePortalStore, usePortalStoreApi } from '../store/portalStore';
 import { getMediaKind, toAbsoluteHref } from '../lib/mediaEmbed';
 
 const DESIGN_W = 3840;
 const DESIGN_H = 2160;
 
 function resolvePreviewSource(portal) {
-  if (portal.video) {
-    return { kind: 'video', url: toAbsoluteHref(portal.video) };
+  const preview = portal.preview || '';
+  if (preview) {
+    const previewKind = getMediaKind(preview);
+    if (!previewKind) return null;
+    return { kind: previewKind, url: toAbsoluteHref(preview) };
   }
-  const kind = getMediaKind(portal.href || '');
+  const destination = portal.destination || '';
+  const kind = getMediaKind(destination);
   if (!kind) return null;
-  return { kind, url: toAbsoluteHref(portal.href) };
+  return { kind, url: toAbsoluteHref(destination) };
 }
 
 function coverLayout(srcW, srcH) {
@@ -80,6 +84,7 @@ async function loadVideoTexture(url) {
 export default function PixiPortalLayer({ portals }) {
   const containerRef = useRef(null);
   const videoMapRef = useRef(new Map());
+  const store = usePortalStoreApi();
   const hoveredPortalId = usePortalStore((s) => s.hoveredPortalId);
   const activePortalId = usePortalStore((s) => s.activePortalId);
   const PORTAL_BG_COLOR = 0xfcfcfc;
@@ -90,10 +95,10 @@ export default function PixiPortalLayer({ portals }) {
     let resizeObserver = null;
     let onWindowResize = null;
     let renderViaGsap = null;
-    const store = usePortalStore.getState();
+    const storeState = store.getState();
     const cleanupVideos = [];
 
-    store.resetPixiPortals();
+    storeState.resetPixiPortals();
 
     const initPixi = async () => {
       const appInstance = new Application();
@@ -265,7 +270,7 @@ export default function PixiPortalLayer({ portals }) {
         innerRing.circle(0, 0, portal.innerR);
         innerRing.stroke({ width: 6.5, color: 0x1a1a1a, alignment: 0.5 });
 
-        store.setPixiPortal(portal.id, {
+        storeState.setPixiPortal(portal.id, {
           innerRing,
           outerRing,
           mask: maskGraphics,
@@ -286,7 +291,7 @@ export default function PixiPortalLayer({ portals }) {
 
     return () => {
       isDestroyed = true;
-      usePortalStore.getState().resetPixiPortals();
+      store.getState().resetPixiPortals();
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
@@ -320,7 +325,7 @@ export default function PixiPortalLayer({ portals }) {
         });
       }
     };
-  }, [portals]);
+  }, [portals, store]);
 
   useEffect(() => {
     const focusedPortalId = activePortalId ?? hoveredPortalId ?? null;
@@ -339,13 +344,13 @@ export default function PixiPortalLayer({ portals }) {
     const focusedPortalId = activePortalId ?? hoveredPortalId ?? null;
     if (!focusedPortalId) return;
 
-    const focused = usePortalStore.getState().getPixiPortal(focusedPortalId);
+    const focused = store.getState().getPixiPortal(focusedPortalId);
     const container = focused?.container;
     if (!container?.parent) return;
 
     // Always render focused (hovered/active) portal above adjacent portals.
     container.parent.addChild(container);
-  }, [hoveredPortalId, activePortalId]);
+  }, [hoveredPortalId, activePortalId, store]);
 
   return (
     <div

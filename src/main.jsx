@@ -3,11 +3,11 @@
  * Entry point: mounts the React portal system.
  *
  * Configuration sources (later sources win per portal id):
- * 1) data-portals='[{"id":1,"href":"..."}]'
- * 2) data-portal-1-href / data-portal-1-video / data-portal-1-label
+ * 1) data-portals='[{"id":1,"destination":"...","preview":"..."}]'
+ * 2) data-portal-1-destination / data-portal-1-preview / data-portal-1-label
  * 3) Elementor link widgets with custom attribute data-portal-id|1
- *    - href comes from the widget link URL
- *    - optional data-portal-video / data-portal-label
+ *    - destination comes from data-portal-destination
+ *    - optional data-portal-preview / data-portal-label
  *    - optional root attribute data-portals-source-selector="#my-map"
  */
 
@@ -21,9 +21,10 @@ function normalizePortalOverride(raw) {
   if (!Number.isFinite(id)) return null;
   return {
     id,
-    href: typeof raw.href === 'string' ? raw.href.trim() : '',
-    video: typeof raw.video === 'string' ? raw.video.trim() : '',
-    label: typeof raw.label === 'string' ? raw.label.trim() : '',
+    destination:
+      typeof raw.destination === 'string' ? raw.destination.trim() : undefined,
+    preview: typeof raw.preview === 'string' ? raw.preview.trim() : undefined,
+    label: typeof raw.label === 'string' ? raw.label.trim() : undefined,
   };
 }
 
@@ -47,11 +48,13 @@ function readJsonOverrides(container) {
 function readAttributeOverrides(container) {
   const overrides = [];
   for (let id = 1; id <= 12; id += 1) {
-    const href = container.getAttribute(`data-portal-${id}-href`)?.trim() || '';
-    const video = container.getAttribute(`data-portal-${id}-video`)?.trim() || '';
+    const destination =
+      container.getAttribute(`data-portal-${id}-destination`)?.trim() || '';
+    const preview =
+      container.getAttribute(`data-portal-${id}-preview`)?.trim() || '';
     const label = container.getAttribute(`data-portal-${id}-label`)?.trim() || '';
-    if (!href && !video && !label) continue;
-    overrides.push({ id, href, video, label });
+    if (!destination && !preview && !label) continue;
+    overrides.push({ id, destination, preview, label });
   }
   return overrides;
 }
@@ -79,19 +82,19 @@ function readElementorMappedOverrides(container) {
     const id = Number(node.getAttribute('data-portal-id'));
     if (!Number.isFinite(id)) return;
 
-    const href =
-      node.getAttribute('data-portal-href')?.trim() ||
-      node.getAttribute('href')?.trim() ||
+    const destination =
+      node.getAttribute('data-portal-destination')?.trim() ||
       '';
-    const video = node.getAttribute('data-portal-video')?.trim() || '';
+    const preview =
+      node.getAttribute('data-portal-preview')?.trim() || '';
     const label =
       node.getAttribute('data-portal-label')?.trim() ||
       node.getAttribute('aria-label')?.trim() ||
       node.textContent?.trim() ||
       '';
 
-    if (!href && !video && !label) return;
-    overrides.push({ id, href, video, label });
+    if (!destination && !preview && !label) return;
+    overrides.push({ id, destination, preview, label });
   });
 
   return overrides;
@@ -104,10 +107,13 @@ function mergePortalOverrides(...groups) {
     const normalized = normalizePortalOverride(entry);
     if (!normalized) return;
     const prev = byId.get(normalized.id) || { id: normalized.id };
-    byId.set(normalized.id, {
-      ...prev,
-      ...normalized,
-    });
+    const next = { ...prev };
+
+    if (normalized.destination !== undefined) next.destination = normalized.destination;
+    if (normalized.preview !== undefined) next.preview = normalized.preview;
+    if (normalized.label !== undefined) next.label = normalized.label;
+
+    byId.set(normalized.id, next);
   });
 
   return Array.from(byId.values());
@@ -122,16 +128,17 @@ function readPortalOverrides(container) {
 }
 
 function mount() {
-  const container = document.getElementById('trulle-portal-root');
-  if (!container) return;
+  const containers = document.querySelectorAll('[data-trulle-portal-root]');
+  if (!containers.length) return;
 
-  const portalOverrides = readPortalOverrides(container);
-
-  createRoot(container).render(
-    <StrictMode>
-      <App portalOverrides={portalOverrides} />
-    </StrictMode>
-  );
+  containers.forEach((container) => {
+    const portalOverrides = readPortalOverrides(container);
+    createRoot(container).render(
+      <StrictMode>
+        <App portalOverrides={portalOverrides} />
+      </StrictMode>
+    );
+  });
 }
 
 if (document.readyState === 'loading') {

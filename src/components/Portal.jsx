@@ -1,12 +1,12 @@
 import { useRef, useCallback } from 'react';
 import usePortalHover from '../hooks/usePortalHover';
 import usePortalTransition from '../hooks/usePortalTransition';
-import usePortalStore from '../store/portalStore';
+import { usePortalStore } from '../store/portalStore';
 
 export default function Portal({ portal, systemRef }) {
   const overlayRef = useRef(null);
 
-  const { href } = portal;
+  const destination = portal.destination || '';
   const transitionPhase = usePortalStore((s) => s.transitionPhase);
   const setHoveredPortal = usePortalStore((s) => s.setHoveredPortal);
   const isInteractive = transitionPhase === 'idle';
@@ -14,21 +14,21 @@ export default function Portal({ portal, systemRef }) {
   const { hoverIn, hoverOut } = usePortalHover(
     overlayRef,
     portal.id,
-    href
+    destination
   );
 
   const { openPortal } = usePortalTransition(
     overlayRef,
     portal.id,
-    href,
+    destination,
     systemRef
   );
 
   const handleMouseEnter = useCallback(() => {
-    if (!href || !isInteractive) return;
+    if (!destination || !isInteractive) return;
     setHoveredPortal(portal.id);
     hoverIn();
-  }, [href, hoverIn, isInteractive, portal.id, setHoveredPortal]);
+  }, [destination, hoverIn, isInteractive, portal.id, setHoveredPortal]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredPortal(null);
@@ -38,20 +38,20 @@ export default function Portal({ portal, systemRef }) {
 
   const handleClick = useCallback((e) => {
     e.preventDefault();
-    if (!href || !isInteractive) return;
+    if (!destination || !isInteractive) return;
     setHoveredPortal(null);
     openPortal();
-  }, [href, isInteractive, openPortal, setHoveredPortal]);
+  }, [destination, isInteractive, openPortal, setHoveredPortal]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      if (!href || !isInteractive) return;
+      if (!destination || !isInteractive) return;
       openPortal();
     }
-  }, [href, isInteractive, openPortal]);
+  }, [destination, isInteractive, openPortal]);
 
-  if (!href) return null;
+  if (!destination) return null;
 
   return (
     <div

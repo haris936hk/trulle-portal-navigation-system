@@ -1,13 +1,9 @@
 import { useEffect, useCallback } from 'react';
 import gsap from 'gsap';
-import usePortalStore from '../store/portalStore';
-import { getDestinationElements } from '../components/DestinationFrame';
+import { usePortalStoreApi } from '../store/portalStore';
 import { seekPortalState, tweenPortalTo } from '../lib/portalMotion';
 import { getPortalMotionConfig } from '../config/motion';
-import {
-  openDestinationFrame,
-  resetDestinationFrame,
-} from '../lib/destinationFrameController';
+import { usePortalRuntime } from '../store/portalRuntimeContext';
 
 /**
  * @param {React.RefObject} overlayRef - the .portal-overlay hit-box
@@ -21,15 +17,17 @@ export default function usePortalTransition(
   href,
   systemRef
 ) {
-  const openPortal = useCallback(() => {
-    const store = usePortalStore.getState();
-    if (store.transitionPhase !== 'idle' || !href) return;
+  const store = usePortalStoreApi();
+  const { frameRef, destinationController } = usePortalRuntime();
 
-    store.openPortal(portalId, href);
+  const openPortal = useCallback(() => {
+    if (store.getState().transitionPhase !== 'idle' || !href) return;
+
+    store.getState().openPortal(portalId, href);
 
     const overlay = overlayRef.current;
     const system = systemRef.current;
-    const pixi = store.getPixiPortal(portalId);
+    const pixi = store.getState().getPixiPortal(portalId);
     const motionConfig = getPortalMotionConfig(portalId);
 
     if (!overlay || !pixi) return;
@@ -44,22 +42,26 @@ export default function usePortalTransition(
       container.parent.addChild(container);
     }
 
-    const { frame: destFrame } = getDestinationElements();
+    const destFrame = frameRef.current;
 
     const showDestination = () => {
       if (!destFrame) return;
-      gsap.set(destFrame, { opacity: 1, visibility: 'visible' });
+      gsap.killTweensOf(destFrame);
+      gsap.set(destFrame, { opacity: 0, visibility: 'visible' });
       destFrame.classList.add('is-active');
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
+      gsap.to(destFrame, {
+        opacity: 1,
+        duration: 0.85,
+        ease: 'sine.inOut',
+        onComplete: () => {
           if (system) system.style.visibility = 'hidden';
           try {
             history.pushState({ portalId }, '', href);
           } catch (_) {
             history.pushState({ portalId }, '', `#portal-${portalId}`);
           }
-          usePortalStore.getState().setPortalOpen();
-        });
+          store.getState().setPortalOpen();
+        },
       });
     };
 
@@ -67,7 +69,7 @@ export default function usePortalTransition(
       duration: motionConfig.openDuration,
       ease: motionConfig.openEase,
       onComplete: () => {
-        openDestinationFrame(href, {
+        destinationController.open(href, {
           onReady: showDestination,
           onTimeout: (target) => {
             const win = window.open(
@@ -82,7 +84,7 @@ export default function usePortalTransition(
         });
       },
     });
-  }, [overlayRef, portalId, href, systemRef]);
+  }, [destinationController, frameRef, href, overlayRef, portalId, store, systemRef]);
 
   return { openPortal };
 }
@@ -91,26 +93,30 @@ export default function usePortalTransition(
  * useBackNavigation - popstate listener for reverse portal animation.
  */
 export function useBackNavigation(systemRef) {
+  const store = usePortalStoreApi();
+  const { frameRef, destinationController } = usePortalRuntime();
+
   useEffect(() => {
     const handlePopState = (event) => {
-      const { frame: destFrame } = getDestinationElements();
+      const destFrame = frameRef.current;
       if (!destFrame || !destFrame.classList.contains('is-active')) return;
 
-      const store = usePortalStore.getState();
-      store.startClosing();
+      store.getState().startClosing();
 
       const portalId =
-        event.state?.portalId || store.activePortalId || store.getBackNavEntry()?.id;
+        event.state?.portalId ||
+        store.getState().activePortalId ||
+        store.getState().getBackNavEntry()?.id;
       const motionConfig = getPortalMotionConfig(portalId);
 
       const system = systemRef.current;
-      const pixi = store.getPixiPortal(portalId);
+      const pixi = store.getState().getPixiPortal(portalId);
 
       if (!portalId || !pixi) {
         destFrame.classList.remove('is-active');
         gsap.set(destFrame, { opacity: 0, visibility: 'hidden' });
         if (system) system.style.visibility = '';
-        store.closePortal();
+        store.getState().closePortal();
         return;
       }
 
@@ -125,8 +131,16 @@ export function useBackNavigation(systemRef) {
 
       seekPortalState(pixi, overlay, motionConfig, 'open');
 
+      gsap.killTweensOf(destFrame);
       destFrame.classList.remove('is-active');
-      gsap.set(destFrame, { opacity: 0, visibility: 'hidden' });
+      gsap.to(destFrame, {
+        opacity: 0,
+        duration: 0.45,
+        ease: 'sine.inOut',
+        onComplete: () => {
+          gsap.set(destFrame, { visibility: 'hidden' });
+        },
+      });
 
       const finishBack = () => {
         if (overlay) {
@@ -134,8 +148,8 @@ export function useBackNavigation(systemRef) {
           overlay.style.zIndex = '';
           overlay.style.pointerEvents = '';
         }
-        store.closePortal();
-        resetDestinationFrame();
+        store.getState().closePortal();
+        destinationController.reset();
       };
 
       tweenPortalTo(pixi, overlay, motionConfig, 'rest', {
@@ -147,5 +161,5 @@ export function useBackNavigation(systemRef) {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [systemRef]);
+  }, [destinationController, frameRef, store, systemRef]);
 }
