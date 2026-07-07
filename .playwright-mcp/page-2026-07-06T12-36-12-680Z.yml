@@ -1,0 +1,6 @@
+- generic [ref=e3]:
+  - img
+  - link "Shop" [ref=e4] [cursor=pointer]
+  - link "About Us" [ref=e5] [cursor=pointer]
+  - link "Watch Reel" [ref=e6] [cursor=pointer]
+  - link "Portal 4" [ref=e7] [cursor=pointer]

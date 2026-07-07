@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>MCP Tool Test Fixture</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; }
+  #dropzone { width: 200px; height: 100px; border: 2px dashed #999; display: flex; align-items: center; justify-content: center; }
+  #draggable { width: 80px; height: 80px; background: teal; color: #fff; display: flex; align-items: center; justify-content: center; cursor: grab; }
+  a { display: block; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <h1>MCP Test Fixture</h1>
+
+  <form id="test-form">
+    <label>Name <input type="text" id="name-input" name="name" /></label><br/>
+    <label>Bio <textarea id="bio-input" name="bio"></textarea></label><br/>
+    <label>Color
+      <select id="color-select" name="color">
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+      </select>
+    </label><br/>
+    <label><input type="checkbox" id="agree-checkbox" name="agree" /> Agree</label><br/>
+    <label>Avatar <input type="file" id="file-input" name="avatar" /></label><br/>
+    <button type="button" id="submit-btn">Submit</button>
+  </form>
+
+  <div id="result"></div>
+
+  <div id="draggable" draggable="true">Drag me</div>
+  <div id="dropzone">Drop here</div>
+
+  <button id="alert-btn">Trigger alert</button>
+  <button id="confirm-btn">Trigger confirm</button>
+  <button id="prompt-btn">Trigger prompt</button>
+
+  <a href="/mcp-test-fixture-page2.html" id="page2-link">Go to page 2</a>
+
+  <script>
+    const resultEl = document.getElementById('result');
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      const data = new FormData(document.getElementById('test-form'));
+      resultEl.textContent = 'Submitted: ' + JSON.stringify(Object.fromEntries(data.entries()));
+      console.log('[fixture] form submitted', Object.fromEntries(data.entries()));
+    });
+
+    document.getElementById('alert-btn').addEventListener('click', () => alert('Test alert'));
+    document.getElementById('confirm-btn').addEventListener('click', () => {
+      const r = confirm('Test confirm');
+      console.log('[fixture] confirm result', r);
+    });
+    document.getElementById('prompt-btn').addEventListener('click', () => {
+      const r = prompt('Test prompt', 'default');
+      console.log('[fixture] prompt result', r);
+    });
+
+    const dz = document.getElementById('dropzone');
+    dz.addEventListener('dragover', (e) => e.preventDefault());
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dz.textContent = 'Dropped!';
+      console.log('[fixture] drop event fired');
+    });
+    document.getElementById('draggable').addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', 'dragged-payload');
+    });
+
+    console.log('[fixture] page loaded log');
+    console.warn('[fixture] page loaded warning');
+    console.error('[fixture] page loaded error (harmless, for testing)');
+
+    fetch('/mcp-test-fixture.html').then(() => console.log('[fixture] self-fetch complete'));
+  </script>
+</body>
+</html>

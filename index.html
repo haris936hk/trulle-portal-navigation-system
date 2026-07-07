@@ -33,12 +33,27 @@
     </style>
   </head>
   <body>
-    <!-- 
-      The mount point for the React Portal System.
-      Optional data-portals attribute can be added here for local overrides:
-      data-portals='[{"id":1,"destination":"/test-pages/destination-1.html"}]'
+    <!--
+      TEST-ONLY: simulates the Elementor widget's "Portal Rows" repeater output
+      (see wordpress/trulle-portal-elementor/widgets/class-trulle-portal-config-widget.php)
+      so different content combos can be previewed locally before uploading the plugin.
+      Each portal below exercises a different combo an editor might configure:
+        1 - label + destination + image preview
+        2 - label + destination + a different image preview
+        3 - label + destination + video preview (peephole plays a video)
+        4 - destination only, no label/preview (tests default label + empty peephole)
+        5 - omitted entirely (tests an unconfigured/disabled row: ring shows, no click/peephole)
     -->
-    <div class="trulle-portal-root" data-trulle-portal-root="1"></div>
+    <div
+      class="trulle-portal-root"
+      data-trulle-portal-root="1"
+      data-portals='[
+        {"id":1,"label":"Shop","destination":"/test-pages/destination-1.html","preview":"/media/portal-1.png"},
+        {"id":2,"label":"About Us","destination":"/test-pages/destination-2.html","preview":"/images/preview2.png"},
+        {"id":3,"label":"Watch Reel","destination":"/test-pages/destination-3.html","preview":"/media/4K%20Relaxing%20Nature%20Sounds%20-%20Short%20Video%20Clips%20of%20Nature.mp4"},
+        {"id":4,"destination":"/test-pages/destination-4.html"}
+      ]'
+    ></div>
 
     <!-- Main entry point for Vite dev server -->
     <script type="module" src="/src/main.jsx"></script>

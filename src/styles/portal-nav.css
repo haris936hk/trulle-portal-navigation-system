@@ -8,30 +8,19 @@
 }
 
 /* ── Container ─────────────────────────────────────── */
+/* Fixed to the viewport (not sized from parent flow) so the portal
+   always fills the screen edge-to-edge and never contributes to
+   page scroll, regardless of where the embedding page places it. */
 .portal-system {
-  position: relative;
-  width: 100vw;
-  max-width: none;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
   margin: 0;
-  height: min(100vh, calc(100vw * (9 / 16)));
-  height: min(100dvh, calc(100vw * (9 / 16)));
-  aspect-ratio: auto;
   overflow: visible;
   background: var(--portal-bg);
   user-select: none;
-}
-
-/* Fallback for browsers without aspect-ratio */
-@supports not (aspect-ratio: 16 / 9) {
-  .portal-system::before {
-    content: '';
-    display: block;
-    padding-top: 56.25%;
-  }
-  .portal-system > * {
-    position: absolute;
-    top: 0; left: 0;
-  }
 }
 
 /* ── SVG ────────────────────────────────────────────── */
